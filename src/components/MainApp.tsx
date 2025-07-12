@@ -7,8 +7,6 @@ import CollegeList from './CollegeList';
 import TaskManagement from './TaskManagement';
 import TeamManagement from './TeamManagement';
 import AuthPage from './AuthPage';
-import { supabase } from '@/integrations/supabase/client';
-import { User, Session } from '@supabase/supabase-js';
 
 const MainApp = () => {
   const [currentPage, setCurrentPage] = useState('dashboard');
