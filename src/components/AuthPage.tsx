@@ -21,7 +21,7 @@ const motivationalQuotes = [
   "Success doesn't just find you. You have to go out and get it."
 ];
 
-const AuthPage = ({ onLogin, error, loading = false }: AuthPageProps) => {
+const AuthPage: React.FC<AuthPageProps> = ({ onLogin, error, loading = false }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
