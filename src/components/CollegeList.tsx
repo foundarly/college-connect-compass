@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, MapPin, Phone, Mail, Eye, Edit, Trash2, Building2, Filter, Calendar, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import CollegeDetailsModal from './CollegeDetailsModal';
+import MobileCard from './MobileCard';
 import type { Tables } from '@/integrations/supabase/types';
 
 type College = Tables<'colleges'>;
@@ -199,145 +199,106 @@ const CollegeList = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-3 md:p-6 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 p-3 lg:p-6 space-y-4 lg:space-y-6">
       {/* Header */}
       <div className="flex flex-col space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">College Management</h1>
+          <div>
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Colleges</h1>
+            <p className="text-gray-600 text-sm lg:text-base">Manage your college outreach</p>
+          </div>
           <Button
             onClick={() => setShowCreateForm(true)}
-            className="flex items-center gap-2 px-4 py-2"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700"
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">Add College</span>
+            <span className="sm:hidden">Add</span>
           </Button>
         </div>
 
-        {/* Enhanced Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          <Card className="p-3">
-            <div className="text-center">
-              <p className="text-xl md:text-2xl font-bold text-gray-900">{statusStats.total}</p>
-              <p className="text-xs text-gray-600">Total</p>
-            </div>
-          </Card>
-          <Card className="p-3">
-            <div className="text-center">
-              <p className="text-xl md:text-2xl font-bold text-green-600">{statusStats.accepted}</p>
-              <p className="text-xs text-gray-600">Accepted</p>
-            </div>
-          </Card>
-          <Card className="p-3">
-            <div className="text-center">
-              <p className="text-xl md:text-2xl font-bold text-yellow-600">{statusStats.pending}</p>
-              <p className="text-xs text-gray-600">Pending</p>
-            </div>
-          </Card>
-          <Card className="p-3">
-            <div className="text-center">
-              <p className="text-xl md:text-2xl font-bold text-blue-600">{statusStats.inDiscussion}</p>
-              <p className="text-xs text-gray-600">In Discussion</p>
-            </div>
-          </Card>
-          <Card className="p-3">
-            <div className="text-center">
-              <p className="text-xl md:text-2xl font-bold text-purple-600">{statusStats.scheduled}</p>
-              <p className="text-xs text-gray-600">Scheduled</p>
-            </div>
-          </Card>
-          <Card className="p-3">
-            <div className="text-center">
-              <p className="text-xl md:text-2xl font-bold text-red-600">{statusStats.rejected}</p>
-              <p className="text-xs text-gray-600">Rejected</p>
-            </div>
-          </Card>
-        </div>
-
-        {/* Upcoming Follow-ups Alert */}
-        {getUpcomingFollowups().length > 0 && (
-          <Card className="border-orange-200 bg-orange-50">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-orange-800">
-                <Calendar className="w-5 h-5" />
-                <span className="font-medium">
-                  {getUpcomingFollowups().length} college(s) need follow-up this week
-                </span>
+        {/* Enhanced Stats - Mobile Optimized */}
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-2 lg:gap-3">
+          {[
+            { label: 'Total', value: statusStats.total, color: 'text-gray-900' },
+            { label: 'Accepted', value: statusStats.accepted, color: 'text-green-600' },
+            { label: 'Pending', value: statusStats.pending, color: 'text-yellow-600' },
+            { label: 'Discussion', value: statusStats.inDiscussion, color: 'text-blue-600' },
+            { label: 'Scheduled', value: statusStats.scheduled, color: 'text-purple-600' },
+            { label: 'Rejected', value: statusStats.rejected, color: 'text-red-600' },
+          ].map((stat, index) => (
+            <Card key={index} className="p-2 lg:p-3">
+              <div className="text-center">
+                <p className={`text-lg lg:text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+                <p className="text-xs text-gray-600">{stat.label}</p>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            </Card>
+          ))}
+        </div>
       </div>
 
-      {/* Enhanced Search and Filters */}
+      {/* Search and Filters - Mobile Optimized */}
       <Card className="p-4">
         <div className="space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
               type="text"
-              placeholder="Search colleges by name, city, or contact person..."
+              placeholder="Search colleges..."
               className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Filter by Status</label>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="accepted">Accepted</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                  <SelectItem value="in-discussion">In Discussion</SelectItem>
-                  <SelectItem value="scheduled">Scheduled Follow-up</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="accepted">Accepted</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="in-discussion">In Discussion</SelectItem>
+                <SelectItem value="scheduled">Scheduled Follow-up</SelectItem>
+              </SelectContent>
+            </Select>
 
-            <div>
-              <label className="block text-sm font-medium mb-1">Filter by Type</label>
-              <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="Engineering">Engineering</SelectItem>
-                  <SelectItem value="Degree">Degree</SelectItem>
-                  <SelectItem value="Polytechnic">Polytechnic</SelectItem>
-                  <SelectItem value="Medical">Medical</SelectItem>
-                  <SelectItem value="Technical">Technical</SelectItem>
-                  <SelectItem value="Arts">Arts</SelectItem>
-                  <SelectItem value="Commerce">Commerce</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="Engineering">Engineering</SelectItem>
+                <SelectItem value="Degree">Degree</SelectItem>
+                <SelectItem value="Polytechnic">Polytechnic</SelectItem>
+                <SelectItem value="Medical">Medical</SelectItem>
+                <SelectItem value="Technical">Technical</SelectItem>
+                <SelectItem value="Arts">Arts</SelectItem>
+                <SelectItem value="Commerce">Commerce</SelectItem>
+              </SelectContent>
+            </Select>
 
-            <div className="flex items-end">
-              <Button 
-                variant="outline" 
-                className="w-full flex items-center gap-2"
-                onClick={() => {
-                  setSearchTerm('');
-                  setFilterStatus('all');
-                  setFilterType('all');
-                }}
-              >
-                <Filter className="w-4 h-4" />
-                Clear Filters
-              </Button>
-            </div>
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2"
+              onClick={() => {
+                setSearchTerm('');
+                setFilterStatus('all');
+                setFilterType('all');
+              }}
+            >
+              <Filter className="w-4 h-4" />
+              Clear
+            </Button>
           </div>
         </div>
       </Card>
 
-      {/* Create College Form */}
+      {/* Create College Form - Mobile Optimized */}
       {showCreateForm && (
         <Card className="p-4">
           <CardHeader className="p-0 pb-4">
@@ -349,94 +310,55 @@ const CollegeList = () => {
             </div>
           </CardHeader>
           <CardContent className="p-0 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">College Name *</label>
-                <Input
-                  placeholder="Enter college name"
-                  value={newCollege.name}
-                  onChange={(e) => setNewCollege({...newCollege, name: e.target.value})}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">College Type</label>
-                <Select value={newCollege.college_type} onValueChange={(value) => setNewCollege({...newCollege, college_type: value})}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Engineering">Engineering</SelectItem>
-                    <SelectItem value="Degree">Degree</SelectItem>
-                    <SelectItem value="Polytechnic">Polytechnic</SelectItem>
-                    <SelectItem value="Medical">Medical</SelectItem>
-                    <SelectItem value="Technical">Technical</SelectItem>
-                    <SelectItem value="Arts">Arts</SelectItem>
-                    <SelectItem value="Commerce">Commerce</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Address</label>
+            <div className="grid grid-cols-1 gap-4">
               <Input
-                placeholder="Enter full address"
+                placeholder="College Name *"
+                value={newCollege.name}
+                onChange={(e) => setNewCollege({...newCollege, name: e.target.value})}
+              />
+              <Select value={newCollege.college_type} onValueChange={(value) => setNewCollege({...newCollege, college_type: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Engineering">Engineering</SelectItem>
+                  <SelectItem value="Degree">Degree</SelectItem>
+                  <SelectItem value="Polytechnic">Polytechnic</SelectItem>
+                  <SelectItem value="Medical">Medical</SelectItem>
+                  <SelectItem value="Technical">Technical</SelectItem>
+                  <SelectItem value="Arts">Arts</SelectItem>
+                  <SelectItem value="Commerce">Commerce</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                placeholder="Address"
                 value={newCollege.address}
                 onChange={(e) => setNewCollege({...newCollege, address: e.target.value})}
               />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">City</label>
+              <div className="grid grid-cols-2 gap-3">
                 <Input
                   placeholder="City"
                   value={newCollege.city}
                   onChange={(e) => setNewCollege({...newCollege, city: e.target.value})}
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">State</label>
                 <Input
                   placeholder="State"
                   value={newCollege.state}
                   onChange={(e) => setNewCollege({...newCollege, state: e.target.value})}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">PIN Code</label>
-                <Input
-                  placeholder="PIN Code"
-                  value={newCollege.pin_code}
-                  onChange={(e) => setNewCollege({...newCollege, pin_code: e.target.value})}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Contact Person</label>
-                <Input
-                  placeholder="Contact person name"
-                  value={newCollege.contact_person}
-                  onChange={(e) => setNewCollege({...newCollege, contact_person: e.target.value})}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Phone</label>
-                <Input
-                  placeholder="Phone number"
-                  type="tel"
-                  value={newCollege.contact_phone}
-                  onChange={(e) => setNewCollege({...newCollege, contact_phone: e.target.value})}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Email</label>
               <Input
-                placeholder="Email address"
+                placeholder="Contact Person"
+                value={newCollege.contact_person}
+                onChange={(e) => setNewCollege({...newCollege, contact_person: e.target.value})}
+              />
+              <Input
+                placeholder="Phone"
+                value={newCollege.contact_phone}
+                onChange={(e) => setNewCollege({...newCollege, contact_phone: e.target.value})}
+              />
+              <Input
+                placeholder="Email"
                 type="email"
                 value={newCollege.contact_email}
                 onChange={(e) => setNewCollege({...newCollege, contact_email: e.target.value})}
@@ -444,7 +366,7 @@ const CollegeList = () => {
             </div>
 
             <div className="flex gap-3">
-              <Button onClick={createCollege} className="flex-1">
+              <Button onClick={createCollege} className="flex-1 bg-blue-600 hover:bg-blue-700">
                 Add College
               </Button>
               <Button variant="outline" onClick={() => setShowCreateForm(false)}>
@@ -455,94 +377,34 @@ const CollegeList = () => {
         </Card>
       )}
 
-      {/* Colleges List */}
-      <div className="space-y-4">
+      {/* Colleges List - Using MobileCard */}
+      <div className="space-y-3 lg:space-y-4">
         {filteredColleges.length > 0 ? (
           filteredColleges.map((college) => (
-            <Card key={college.id} className="p-4 hover:shadow-md transition-shadow">
-              <div className="space-y-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-semibold text-gray-900 text-lg">{college.name}</h3>
-                      {getStatusBadge(college.status || 'pending')}
-                    </div>
-                    
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-2">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4" />
-                        <span>{college.city}, {college.state}</span>
-                      </div>
-                      {college.college_type && (
-                        <Badge variant="outline" className="text-xs">
-                          {college.college_type}
-                        </Badge>
-                      )}
-                    </div>
-
-                    {/* Contact Info */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-600 mb-3">
-                      {college.contact_person && (
-                        <div className="flex items-center gap-1">
-                          <Users className="w-4 h-4" />
-                          <span>{college.contact_person}</span>
-                        </div>
-                      )}
-                      {college.contact_phone && (
-                        <div className="flex items-center gap-1">
-                          <Phone className="w-4 h-4" />
-                          <span>{college.contact_phone}</span>
-                        </div>
-                      )}
-                      {college.contact_email && (
-                        <div className="flex items-center gap-1">
-                          <Mail className="w-4 h-4" />
-                          <span>{college.contact_email}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Follow-up dates */}
-                    {(college.last_contact_date || college.next_followup_date) && (
-                      <div className="flex flex-wrap gap-4 text-xs text-gray-500 mb-2">
-                        {college.last_contact_date && (
-                          <span>Last contact: {new Date(college.last_contact_date).toLocaleDateString()}</span>
-                        )}
-                        {college.next_followup_date && (
-                          <span className={new Date(college.next_followup_date) <= new Date(Date.now() + 7*24*60*60*1000) ? 'text-orange-600 font-medium' : ''}>
-                            Next follow-up: {new Date(college.next_followup_date).toLocaleDateString()}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2 pt-2 border-t">
-                  <Button 
-                    size="sm" 
-                    variant="default" 
-                    className="flex-1"
-                    onClick={() => openDetailsModal(college)}
-                  >
-                    <Eye className="w-4 h-4 mr-1" />
-                    View Details
-                  </Button>
-                  <Button size="sm" variant="outline">
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => deleteCollege(college.id)}
-                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
+            <MobileCard
+              key={college.id}
+              title={college.name}
+              location={`${college.city}, ${college.state}`}
+              status={college.status || 'pending'}
+              contact={{
+                person: college.contact_person || undefined,
+                phone: college.contact_phone || undefined,
+                email: college.contact_email || undefined,
+              }}
+              dates={{
+                lastContact: college.last_contact_date ? new Date(college.last_contact_date).toLocaleDateString() : undefined,
+                nextFollowup: college.next_followup_date ? new Date(college.next_followup_date).toLocaleDateString() : undefined,
+              }}
+              badges={college.college_type ? [college.college_type] : []}
+              onClick={() => openDetailsModal(college)}
+              actions={
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => deleteCollege(college.id)}>
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
-              </div>
-            </Card>
+              }
+            />
           ))
         ) : (
           <Card className="p-8 text-center">
@@ -554,7 +416,7 @@ const CollegeList = () => {
                 : "Add your first college to get started."
               }
             </p>
-            <Button onClick={() => setShowCreateForm(true)}>
+            <Button onClick={() => setShowCreateForm(true)} className="bg-blue-600 hover:bg-blue-700">
               <Plus className="w-4 h-4 mr-2" />
               Add First College
             </Button>

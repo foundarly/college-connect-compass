@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
+import MobileNavigation from './MobileNavigation';
 import Dashboard from './Dashboard';
 import CollegeList from './CollegeList';
 import TaskManagement from './TaskManagement';
@@ -26,7 +27,8 @@ const MainApp = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* Desktop Sidebar */}
       <Sidebar 
         currentPage={currentPage}
         onPageChange={setCurrentPage}
@@ -34,10 +36,25 @@ const MainApp = () => {
         onToggle={() => setSidebarOpen(!sidebarOpen)}
       />
       
+      {/* Mobile Navigation */}
+      <MobileNavigation
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+        onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
+      />
+      
       {/* Main Content */}
-      <div className="flex-1 lg:ml-0 overflow-auto">
-        <div className="pt-16 lg:pt-0">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Desktop content - normal layout */}
+        <div className="hidden lg:block flex-1 overflow-auto">
           {renderCurrentPage()}
+        </div>
+        
+        {/* Mobile content - with padding for fixed navigation */}
+        <div className="lg:hidden flex-1 overflow-auto pt-16 pb-20 safe-area-pt safe-area-pb">
+          <div className="min-h-full">
+            {renderCurrentPage()}
+          </div>
         </div>
       </div>
     </div>

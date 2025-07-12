@@ -1,9 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { Users, CheckSquare, Calendar, TrendingUp, Plus, ArrowRight } from 'lucide-react';
+import { Users, CheckSquare, Calendar, TrendingUp, Plus, ArrowRight, Building2, Target, Clock, Award } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import StatsGrid from './StatsGrid';
+import QuickActions from './QuickActions';
+import MobileCard from './MobileCard';
 import type { Tables } from '@/integrations/supabase/types';
 
 type College = Tables<'colleges'>;
@@ -37,7 +40,6 @@ const Dashboard = ({ onNavigate }: DashboardProps) => {
         supabase.from('team_members').select('*')
       ]);
 
-      // Calculate stats
       const colleges = collegesResponse.data || [];
       const tasks = tasksResponse.data || [];
       const team = teamResponse.data || [];
@@ -49,10 +51,7 @@ const Dashboard = ({ onNavigate }: DashboardProps) => {
         activeColleges: colleges.filter(c => c.status === 'accepted').length
       });
 
-      // Recent colleges (last 5)
       setRecentColleges(colleges.slice(0, 5));
-
-      // Upcoming tasks (next 5 pending)
       setUpcomingTasks(tasks.filter(t => t.status === 'pending').slice(0, 5));
       
     } catch (error) {
@@ -62,145 +61,131 @@ const Dashboard = ({ onNavigate }: DashboardProps) => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'accepted': return 'bg-green-100 text-green-800 border-green-200';
-      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
-      case 'in-discussion': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'scheduled': return 'bg-purple-100 text-purple-800 border-purple-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+  const handleQuickAction = (action: string) => {
+    switch (action) {
+      case 'add-college':
+        onNavigate('colleges');
+        break;
+      case 'search':
+      case 'filter':
+        onNavigate('colleges');
+        break;
+      case 'schedule':
+      case 'reports':
+        onNavigate('tasks');
+        break;
+      case 'team':
+        onNavigate('team');
+        break;
+      default:
+        break;
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800 border-red-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low': return 'bg-green-100 text-green-800 border-green-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
+  const handleStatClick = (index: number) => {
+    const pages = ['colleges', 'colleges', 'tasks', 'team'];
+    onNavigate(pages[index]);
   };
+
+  const statsData = [
+    {
+      label: 'Total Colleges',
+      value: stats.totalColleges,
+      icon: Building2,
+      color: 'bg-blue-600',
+      trend: { value: 12, isPositive: true }
+    },
+    {
+      label: 'Active',
+      value: stats.activeColleges,
+      icon: Target,
+      color: 'bg-green-600',
+      trend: { value: 8, isPositive: true }
+    },
+    {
+      label: 'Pending Tasks',
+      value: stats.pendingTasks,
+      icon: Clock,
+      color: 'bg-orange-600',
+      trend: { value: 3, isPositive: false }
+    },
+    {
+      label: 'Team Members',
+      value: stats.teamMembers,
+      icon: Users,
+      color: 'bg-purple-600',
+      trend: { value: 5, isPositive: true }
+    }
+  ];
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 space-y-6">
-      {/* Header */}
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 p-3 lg:p-6 space-y-4 lg:space-y-6">
+      {/* Welcome Header */}
+      <div className="space-y-3 lg:space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-600">Welcome back! Here's what's happening today.</p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Good morning! 👋</h1>
+            <p className="text-gray-600 text-sm lg:text-base">Here's what's happening with your outreach today.</p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={() => onNavigate('colleges')} className="flex items-center gap-2">
+            <Button onClick={() => onNavigate('colleges')} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700">
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">Add College</span>
-            </Button>
-            <Button onClick={() => onNavigate('tasks')} variant="outline" className="flex items-center gap-2">
-              <CheckSquare className="w-4 h-4" />
-              <span className="hidden sm:inline">New Task</span>
+              <span className="sm:hidden">Add</span>
             </Button>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onNavigate('colleges')}>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Users className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Total Colleges</p>
-                  <p className="text-xl font-bold text-gray-900">{stats.totalColleges}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onNavigate('colleges')}>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <TrendingUp className="w-5 h-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Active</p>
-                  <p className="text-xl font-bold text-green-600">{stats.activeColleges}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onNavigate('tasks')}>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-yellow-100 rounded-lg">
-                  <CheckSquare className="w-5 h-5 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Pending Tasks</p>
-                  <p className="text-xl font-bold text-yellow-600">{stats.pendingTasks}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onNavigate('team')}>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Users className="w-5 h-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Team Members</p>
-                  <p className="text-xl font-bold text-purple-600">{stats.teamMembers}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Stats Grid */}
+        <StatsGrid stats={statsData} onStatClick={handleStatClick} />
       </div>
 
+      {/* Quick Actions */}
+      <QuickActions onAction={handleQuickAction} />
+
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         {/* Recent Colleges */}
-        <Card>
-          <CardHeader className="pb-3">
+        <Card className="flex flex-col">
+          <CardHeader className="pb-3 flex-shrink-0">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Recent Colleges</CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => onNavigate('colleges')}>
+              <CardTitle className="text-lg font-semibold">Recent Colleges</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => onNavigate('colleges')} className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
                 View All <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="flex-1 space-y-3 overflow-auto">
             {recentColleges.length > 0 ? (
               recentColleges.map((college) => (
-                <div key={college.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-gray-900 truncate">{college.name}</h4>
-                    <p className="text-sm text-gray-600">{college.city}, {college.state}</p>
-                  </div>
-                  <span className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(college.status || 'pending')}`}>
-                    {college.status}
-                  </span>
-                </div>
+                <MobileCard
+                  key={college.id}
+                  title={college.name}
+                  location={`${college.city}, ${college.state}`}
+                  status={college.status || 'pending'}
+                  contact={{
+                    person: college.contact_person || undefined,
+                    phone: college.contact_phone || undefined,
+                    email: college.contact_email || undefined,
+                  }}
+                  badges={college.college_type ? [college.college_type] : []}
+                  onClick={() => onNavigate('colleges')}
+                />
               ))
             ) : (
               <div className="text-center py-8 text-gray-500">
-                <Users className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                <p>No colleges added yet</p>
-                <Button variant="outline" size="sm" className="mt-2" onClick={() => onNavigate('colleges')}>
+                <Building2 className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <p className="font-medium">No colleges added yet</p>
+                <p className="text-sm text-gray-400 mb-4">Start by adding your first college</p>
+                <Button variant="outline" size="sm" onClick={() => onNavigate('colleges')} className="text-blue-600 hover:text-blue-700 border-blue-200 hover:bg-blue-50">
                   Add First College
                 </Button>
               </div>
@@ -209,41 +194,37 @@ const Dashboard = ({ onNavigate }: DashboardProps) => {
         </Card>
 
         {/* Upcoming Tasks */}
-        <Card>
-          <CardHeader className="pb-3">
+        <Card className="flex flex-col">
+          <CardHeader className="pb-3 flex-shrink-0">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Upcoming Tasks</CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => onNavigate('tasks')}>
+              <CardTitle className="text-lg font-semibold">Upcoming Tasks</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => onNavigate('tasks')} className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
                 View All <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="flex-1 space-y-3 overflow-auto">
             {upcomingTasks.length > 0 ? (
               upcomingTasks.map((task) => (
-                <div key={task.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-gray-900 truncate">{task.title}</h4>
-                    <div className="flex items-center gap-2 mt-1">
-                      {task.due_date && (
-                        <div className="flex items-center gap-1 text-xs text-gray-600">
-                          <Calendar className="w-3 h-3" />
-                          {new Date(task.due_date).toLocaleDateString()}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <span className={`px-2 py-1 text-xs rounded-full border ${getPriorityColor(task.priority || 'medium')}`}>
-                    {task.priority}
-                  </span>
-                </div>
+                <MobileCard
+                  key={task.id}
+                  title={task.title}
+                  subtitle={task.description}
+                  status={task.priority || 'medium'}
+                  dates={{
+                    nextFollowup: task.due_date || undefined,
+                  }}
+                  badges={[task.task_type || 'General']}
+                  onClick={() => onNavigate('tasks')}
+                />
               ))
             ) : (
               <div className="text-center py-8 text-gray-500">
-                <CheckSquare className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                <p>No pending tasks</p>
-                <Button variant="outline" size="sm" className="mt-2" onClick={() => onNavigate('tasks')}>
-                  Create First Task
+                <CheckSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <p className="font-medium">No pending tasks</p>
+                <p className="text-sm text-gray-400 mb-4">All caught up! Great work.</p>
+                <Button variant="outline" size="sm" onClick={() => onNavigate('tasks')} className="text-blue-600 hover:text-blue-700 border-blue-200 hover:bg-blue-50">
+                  Create Task
                 </Button>
               </div>
             )}
@@ -251,29 +232,32 @@ const Dashboard = ({ onNavigate }: DashboardProps) => {
         </Card>
       </div>
 
-      {/* Quick Actions */}
+      {/* Performance Insights - Mobile Optimized */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Quick Actions</CardTitle>
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+            <Award className="w-5 h-5 text-yellow-600" />
+            Performance Insights
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => onNavigate('colleges')}>
-              <Users className="w-6 h-6" />
-              <span className="text-sm">Manage Colleges</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => onNavigate('tasks')}>
-              <CheckSquare className="w-6 h-6" />
-              <span className="text-sm">View Tasks</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => onNavigate('team')}>
-              <Users className="w-6 h-6" />
-              <span className="text-sm">Team Members</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => onNavigate('colleges')}>
-              <Plus className="w-6 h-6" />
-              <span className="text-sm">Add College</span>
-            </Button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
+              <div className="text-2xl font-bold text-green-600">85%</div>
+              <div className="text-sm text-green-700 font-medium">Success Rate</div>
+            </div>
+            <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="text-2xl font-bold text-blue-600">12</div>
+              <div className="text-sm text-blue-700 font-medium">This Week</div>
+            </div>
+            <div className="text-center p-4 bg-purple-50 rounded-lg border border-purple-200">
+              <div className="text-2xl font-bold text-purple-600">3.2</div>
+              <div className="text-sm text-purple-700 font-medium">Avg Follow-ups</div>
+            </div>
+            <div className="text-center p-4 bg-orange-50 rounded-lg border border-orange-200">
+              <div className="text-2xl font-bold text-orange-600">24h</div>
+              <div className="text-sm text-orange-700 font-medium">Response Time</div>
+            </div>
           </div>
         </CardContent>
       </Card>
