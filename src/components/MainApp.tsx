@@ -6,10 +6,48 @@ import Dashboard from './Dashboard';
 import CollegeList from './CollegeList';
 import TaskManagement from './TaskManagement';
 import TeamManagement from './TeamManagement';
+import AuthPage from './AuthPage';
 
 const MainApp = () => {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authError, setAuthError] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+
+  const handleLogin = async (email: string, password: string) => {
+    setAuthLoading(true);
+    setAuthError('');
+    
+    // Simple demo authentication
+    if (email === 'admin@foundarly.com' && password === 'password123') {
+      setTimeout(() => {
+        setIsAuthenticated(true);
+        setAuthLoading(false);
+      }, 1000);
+    } else {
+      setTimeout(() => {
+        setAuthError('Invalid credentials. Please try admin@foundarly.com / password123');
+        setAuthLoading(false);
+      }, 1000);
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setCurrentPage('dashboard');
+    setSidebarOpen(false);
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <AuthPage 
+        onLogin={handleLogin}
+        error={authError}
+        loading={authLoading}
+      />
+    );
+  }
 
   const renderCurrentPage = () => {
     switch (currentPage) {
@@ -34,6 +72,7 @@ const MainApp = () => {
         onPageChange={setCurrentPage}
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
+        onLogout={handleLogout}
       />
       
       {/* Mobile Navigation */}
@@ -45,14 +84,16 @@ const MainApp = () => {
       
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Desktop content - normal layout */}
-        <div className="hidden lg:block flex-1 overflow-auto">
-          {renderCurrentPage()}
+        {/* Desktop content */}
+        <div className="hidden lg:block flex-1 overflow-y-auto scrollbar-hide">
+          <div className="animate-fade-in">
+            {renderCurrentPage()}
+          </div>
         </div>
         
-        {/* Mobile content - no top padding, just bottom padding for nav */}
-        <div className="lg:hidden flex-1 overflow-auto">
-          <div className="min-h-full">
+        {/* Mobile content */}
+        <div className="lg:hidden flex-1 overflow-y-auto scrollbar-hide">
+          <div className="min-h-full animate-fade-in">
             {renderCurrentPage()}
           </div>
         </div>

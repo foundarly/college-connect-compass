@@ -1,8 +1,8 @@
 
 {
-  "name": "CRM Dashboard - College Relationship Management",
-  "short_name": "CRM Dashboard",
-  "description": "Professional College Relationship Management Dashboard for tracking interactions, tasks, and team management",
+  "name": "Foundarly Management - Excellence in Every Connection",
+  "short_name": "Foundarly",
+  "description": "Professional relationship management platform for driving excellence and success in every connection",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -29,7 +29,7 @@
     {
       "name": "Colleges",
       "short_name": "Colleges",
-      "description": "Manage colleges",
+      "description": "Manage relationships",
       "url": "/?page=colleges",
       "icons": [
         {
@@ -115,7 +115,7 @@
       "sizes": "1280x720",
       "type": "image/svg+xml",
       "form_factor": "wide",
-      "label": "Dashboard view on desktop"
+      "label": "Foundarly Management dashboard view on desktop"
     },
     {
       "src": "/placeholder.svg",
