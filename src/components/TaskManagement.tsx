@@ -1,8 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Calendar, Clock, AlertCircle, CheckCircle, Filter, Search } from 'lucide-react';
+import { Plus, Calendar, Clock, AlertCircle, CheckCircle, Filter, Search, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Task = Tables<'tasks'>;
@@ -15,6 +18,14 @@ const TaskManagement = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterPriority, setFilterPriority] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newTask, setNewTask] = useState({
+    title: '',
+    description: '',
+    college_id: '',
+    due_date: '',
+    priority: 'medium' as 'low' | 'medium' | 'high'
+  });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -39,6 +50,53 @@ const TaskManagement = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createTask = async () => {
+    if (!newTask.title.trim()) {
+      toast({
+        title: "Error",
+        description: "Task title is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert([{
+          ...newTask,
+          college_id: newTask.college_id || null,
+          created_by: null // In a real app, this would be the authenticated user's ID
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setTasks([data, ...tasks]);
+      setNewTask({
+        title: '',
+        description: '',
+        college_id: '',
+        due_date: '',
+        priority: 'medium'
+      });
+      setShowCreateForm(false);
+
+      toast({
+        title: "Success",
+        description: "Task created successfully",
+      });
+    } catch (error) {
+      console.error('Error creating task:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create task",
+        variant: "destructive",
+      });
     }
   };
 
@@ -69,6 +127,31 @@ const TaskManagement = () => {
     }
   };
 
+  const deleteTask = async (taskId: string) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      setTasks(tasks.filter(task => task.id !== taskId));
+
+      toast({
+        title: "Success",
+        description: "Task deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete task",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getCollegeName = (collegeId: string | null) => {
     if (!collegeId) return 'General Task';
     const college = colleges.find(c => c.id === collegeId);
@@ -77,19 +160,19 @@ const TaskManagement = () => {
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-50 text-red-700 border-red-200';
-      case 'medium': return 'bg-amber-50 text-amber-700 border-amber-200';
-      case 'low': return 'bg-green-50 text-green-700 border-green-200';
-      default: return 'bg-gray-50 text-gray-700 border-gray-200';
+      case 'high': return 'bg-red-100 text-red-800 border-red-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'low': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'overdue': return 'bg-red-50 text-red-700 border-red-200';
-      case 'pending': return 'bg-blue-50 text-blue-700 border-blue-200';
-      default: return 'bg-gray-50 text-gray-700 border-gray-200';
+      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
+      case 'overdue': return 'bg-red-100 text-red-800 border-red-200';
+      case 'pending': return 'bg-blue-100 text-blue-800 border-blue-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
@@ -118,121 +201,95 @@ const TaskManagement = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-8 text-white">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-4xl font-bold mb-2">Task Management</h1>
-            <p className="text-purple-100 text-lg">Stay organized and never miss a follow-up</p>
-            <div className="flex items-center gap-6 mt-4 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span>{taskStats.completed} Completed</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                <span>{taskStats.pending} Pending</span>
-              </div>
-              {taskStats.overdue > 0 && (
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                  <span>{taskStats.overdue} Overdue</span>
+    <div className="min-h-screen bg-gray-50 p-4 space-y-6">
+      {/* Mobile-First Header */}
+      <div className="space-y-4">
+        <div className="flex flex-col space-y-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Tasks</h1>
+            <Button
+              onClick={() => setShowCreateForm(true)}
+              className="flex items-center gap-2 px-4 py-2"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">New Task</span>
+            </Button>
+          </div>
+          
+          {/* Stats Cards - Mobile Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Card className="p-3">
+              <div className="flex items-center space-x-2">
+                <Calendar className="w-4 h-4 text-blue-600" />
+                <div>
+                  <p className="text-xs text-gray-600">Total</p>
+                  <p className="text-lg font-bold">{taskStats.total}</p>
                 </div>
-              )}
-            </div>
-          </div>
-          <button className="flex items-center px-6 py-3 bg-white text-purple-600 rounded-xl hover:bg-purple-50 transition-all shadow-lg hover:shadow-xl font-semibold">
-            <Plus className="w-5 h-5 mr-2" />
-            Create Task
-          </button>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Tasks</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{taskStats.total}</p>
-            </div>
-            <div className="bg-blue-50 p-3 rounded-lg">
-              <Calendar className="w-5 h-5 text-blue-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Pending</p>
-              <p className="text-2xl font-bold text-blue-600 mt-1">{taskStats.pending}</p>
-            </div>
-            <div className="bg-blue-50 p-3 rounded-lg">
-              <Clock className="w-5 h-5 text-blue-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Completed</p>
-              <p className="text-2xl font-bold text-emerald-600 mt-1">{taskStats.completed}</p>
-            </div>
-            <div className="bg-emerald-50 p-3 rounded-lg">
-              <CheckCircle className="w-5 h-5 text-emerald-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Overdue</p>
-              <p className="text-2xl font-bold text-red-600 mt-1">{taskStats.overdue}</p>
-            </div>
-            <div className="bg-red-50 p-3 rounded-lg">
-              <AlertCircle className="w-5 h-5 text-red-600" />
-            </div>
+              </div>
+            </Card>
+            <Card className="p-3">
+              <div className="flex items-center space-x-2">
+                <Clock className="w-4 h-4 text-yellow-600" />
+                <div>
+                  <p className="text-xs text-gray-600">Pending</p>
+                  <p className="text-lg font-bold text-yellow-600">{taskStats.pending}</p>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-3">
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="w-4 h-4 text-green-600" />
+                <div>
+                  <p className="text-xs text-gray-600">Done</p>
+                  <p className="text-lg font-bold text-green-600">{taskStats.completed}</p>
+                </div>
+              </div>
+            </Card>
+            <Card className="p-3">
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="w-4 h-4 text-red-600" />
+                <div>
+                  <p className="text-xs text-gray-600">Overdue</p>
+                  <p className="text-lg font-bold text-red-600">{taskStats.overdue}</p>
+                </div>
+              </div>
+            </Card>
           </div>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
+      {/* Search and Filters */}
+      <Card className="p-4">
+        <div className="space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
               type="text"
-              placeholder="Search tasks, colleges, or descriptions..."
-              className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="Search tasks..."
+              className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-3">
             <select
-              className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
               <option value="completed">Completed</option>
-              <option value="overdue">Overdue</option>
             </select>
             <select
-              className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value)}
             >
@@ -243,76 +300,146 @@ const TaskManagement = () => {
             </select>
           </div>
         </div>
-      </div>
+      </Card>
+
+      {/* Create Task Form */}
+      {showCreateForm && (
+        <Card className="p-4">
+          <CardHeader className="p-0 pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Create New Task</CardTitle>
+              <Button variant="outline" size="sm" onClick={() => setShowCreateForm(false)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0 space-y-4">
+            <Input
+              placeholder="Task title"
+              value={newTask.title}
+              onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+            />
+            <textarea
+              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              placeholder="Task description"
+              value={newTask.description}
+              onChange={(e) => setNewTask({...newTask, description: e.target.value})}
+            />
+            <select
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={newTask.college_id}
+              onChange={(e) => setNewTask({...newTask, college_id: e.target.value})}
+            >
+              <option value="">Select College (Optional)</option>
+              {colleges.map(college => (
+                <option key={college.id} value={college.id}>{college.name}</option>
+              ))}
+            </select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                type="date"
+                value={newTask.due_date}
+                onChange={(e) => setNewTask({...newTask, due_date: e.target.value})}
+              />
+              <select
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={newTask.priority}
+                onChange={(e) => setNewTask({...newTask, priority: e.target.value as 'low' | 'medium' | 'high'})}
+              >
+                <option value="low">Low Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="high">High Priority</option>
+              </select>
+            </div>
+            <div className="flex gap-3">
+              <Button onClick={createTask} className="flex-1">
+                Create Task
+              </Button>
+              <Button variant="outline" onClick={() => setShowCreateForm(false)}>
+                Cancel
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Tasks List */}
       <div className="space-y-4">
         {filteredTasks.length > 0 ? (
           filteredTasks.map((task) => (
-            <div key={task.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900">{task.title}</h3>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getPriorityColor(task.priority || 'medium')}`}>
-                      {task.priority} priority
-                    </span>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(task.status || 'pending')}`}>
-                      {task.status}
-                    </span>
-                  </div>
-                  
-                  <p className="text-gray-600 mb-3">{task.description}</p>
-                  
-                  <div className="flex items-center gap-4 text-sm text-gray-500">
-                    <span className="font-medium">{getCollegeName(task.college_id)}</span>
-                    {task.due_date && (
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        <span className={isOverdue(task.due_date) ? 'text-red-600 font-medium' : ''}>
+            <Card key={task.id} className="p-4">
+              <div className="space-y-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 mb-1">{task.title}</h3>
+                    <p className="text-sm text-gray-600 mb-2">{task.description}</p>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      <span className={`px-2 py-1 text-xs rounded-full border ${getPriorityColor(task.priority || 'medium')}`}>
+                        {task.priority} priority
+                      </span>
+                      <span className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(task.status || 'pending')}`}>
+                        {task.status}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-500 space-y-1">
+                      <div>{getCollegeName(task.college_id)}</div>
+                      {task.due_date && (
+                        <div className={`flex items-center gap-1 ${isOverdue(task.due_date) ? 'text-red-600 font-medium' : ''}`}>
+                          <Calendar className="w-3 h-3" />
                           Due: {new Date(task.due_date).toLocaleDateString()}
-                        </span>
-                      </div>
-                    )}
-                    <span>Created: {new Date(task.created_at).toLocaleDateString()}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2 ml-4">
+                <div className="flex flex-wrap gap-2 pt-2 border-t">
                   {task.status !== 'completed' && (
-                    <button
+                    <Button
+                      size="sm"
                       onClick={() => updateTaskStatus(task.id, 'completed')}
-                      className="px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors font-medium"
+                      className="bg-green-600 hover:bg-green-700 text-white"
                     >
-                      Mark Complete
-                    </button>
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      Complete
+                    </Button>
                   )}
                   {task.status === 'completed' && (
-                    <button
+                    <Button
+                      size="sm"
+                      variant="outline"
                       onClick={() => updateTaskStatus(task.id, 'pending')}
-                      className="px-4 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors font-medium"
                     >
                       Reopen
-                    </button>
+                    </Button>
                   )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => deleteTask(task.id)}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    Delete
+                  </Button>
                 </div>
               </div>
-            </div>
+            </Card>
           ))
         ) : (
-          <div className="text-center py-16 bg-gray-50 rounded-xl">
-            <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No tasks found</h3>
-            <p className="text-gray-600 mb-6">
+          <Card className="p-8 text-center">
+            <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No tasks found</h3>
+            <p className="text-gray-600 mb-4">
               {searchTerm || filterStatus !== 'all' || filterPriority !== 'all'
                 ? "Try adjusting your search or filter criteria."
-                : "Create your first task to get started with follow-up management."
+                : "Create your first task to get started."
               }
             </p>
-            <button className="px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-colors font-medium">
+            <Button onClick={() => setShowCreateForm(true)}>
+              <Plus className="w-4 h-4 mr-2" />
               Create First Task
-            </button>
-          </div>
+            </Button>
+          </Card>
         )}
       </div>
     </div>
