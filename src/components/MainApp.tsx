@@ -13,52 +13,42 @@ import { User, Session } from '@supabase/supabase-js';
 const MainApp = () => {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authError, setAuthError] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
 
-  useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth state changed:', event, session);
-        setSession(session);
-        setUser(session?.user ?? null);
+  const handleLogin = async (email: string, password: string) => {
+    setAuthLoading(true);
+    setAuthError('');
+    
+    // Simple demo authentication
+    if (email === 'admin@foundarly.com' && password === 'password123') {
+      setTimeout(() => {
+        setIsAuthenticated(true);
         setAuthLoading(false);
-      }
-    );
+      }, 1000);
+    } else {
+      setTimeout(() => {
+        setAuthError('Invalid credentials. Please try admin@foundarly.com / password123');
+        setAuthLoading(false);
+      }, 1000);
+    }
+  };
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session:', session);
-      setSession(session);
-      setUser(session?.user ?? null);
-      setAuthLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const handleLogout = () => {
+    setIsAuthenticated(false);
     setCurrentPage('dashboard');
     setSidebarOpen(false);
   };
 
-  // Show loading spinner while checking auth status
-  if (authLoading) {
+  if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
+      <AuthPage 
+        onLogin={handleLogin}
+        error={authError}
+        loading={authLoading}
+      />
     );
-  }
-
-  if (!user || !session) {
-    return <AuthPage />;
   }
 
   const renderCurrentPage = () => {

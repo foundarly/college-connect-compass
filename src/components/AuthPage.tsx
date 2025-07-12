@@ -154,72 +154,27 @@ const AuthPage: React.FC = () => {
       <div className="relative w-full max-w-md">
         {/* Logo and Brand */}
         <div className="text-center mb-8 animate-fade-in">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-3xl mb-6 animate-scale-in shadow-2xl border border-white/10">
-            <Building2 className="w-10 h-10 text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl mb-4 animate-scale-in">
+            <Building2 className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3 tracking-tight">
-            Foundarly Management
-          </h1>
-          <p className="text-blue-200 text-lg font-medium">Excellence in Every Connection</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Foundarly Management</h1>
+          <p className="text-gray-600">Excellence in Every Connection</p>
         </div>
 
         {/* Motivational Quote */}
-        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 mb-8 border border-white/20 shadow-2xl animate-fade-in" style={{ animationDelay: '0.2s' }}>
-          <div className="flex items-center gap-3 text-blue-300 mb-3">
-            <Sparkles className="w-5 h-5 flex-shrink-0 animate-pulse" />
-            <span className="font-semibold">Daily Inspiration</span>
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 mb-6 border border-white/50 shadow-lg animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <div className="flex items-center gap-2 text-blue-600 mb-2">
+            <Sparkles className="w-4 h-4" />
+            <span className="text-sm font-medium">Daily Motivation</span>
           </div>
-          <p className="text-white/90 italic leading-relaxed font-medium">"{currentQuote}"</p>
+          <p className="text-gray-700 text-sm italic">"{currentQuote}"</p>
         </div>
 
-        {/* Auth Form */}
-        <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/50 p-8 sm:p-10 animate-scale-in" style={{ animationDelay: '0.4s' }}>
-          {/* Tab Switcher */}
-          <div className="flex bg-gray-100 rounded-2xl p-1 mb-8">
-            <button
-              onClick={() => setIsLogin(true)}
-              className={`flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300 ${
-                isLogin
-                  ? 'bg-white text-blue-600 shadow-lg'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              onClick={() => setIsLogin(false)}
-              className={`flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300 ${
-                !isLogin
-                  ? 'bg-white text-blue-600 shadow-lg'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Sign Up
-            </button>
-          </div>
-
-          <form onSubmit={isLogin ? handleLogin : handleSignup} className="space-y-6">
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-gray-700 font-semibold flex items-center gap-2">
-                  <User className="w-4 h-4" />
-                  Full Name
-                </Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Enter your full name"
-                  required
-                  className="h-14 border-2 border-gray-200 focus:border-blue-500 focus:ring-blue-500 text-base rounded-xl bg-gray-50/50"
-                />
-              </div>
-            )}
-
+        {/* Login Form */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-8 animate-scale-in" style={{ animationDelay: '0.4s' }}>
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-700 font-semibold flex items-center gap-2">
-                <Mail className="w-4 h-4" />
+              <Label htmlFor="email" className="text-gray-700 font-medium">
                 Email Address
               </Label>
               <Input
@@ -229,14 +184,12 @@ const AuthPage: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
                 required
-                className="h-14 border-2 border-gray-200 focus:border-blue-500 focus:ring-blue-500 text-base rounded-xl bg-gray-50/50"
-                autoComplete="email"
+                className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-gray-700 font-semibold flex items-center gap-2">
-                <Lock className="w-4 h-4" />
+              <Label htmlFor="password" className="text-gray-700 font-medium">
                 Password
               </Label>
               <div className="relative">
@@ -247,14 +200,12 @@ const AuthPage: React.FC = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   required
-                  className="h-14 pr-14 border-2 border-gray-200 focus:border-blue-500 focus:ring-blue-500 text-base rounded-xl bg-gray-50/50"
-                  autoComplete={isLogin ? "current-password" : "new-password"}
+                  className="h-12 pr-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-1"
-                  tabIndex={-1}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -292,8 +243,8 @@ const AuthPage: React.FC = () => {
 
             <Button
               type="submit"
-              disabled={loading || !email || !password || (!isLogin && (!fullName || !confirmPassword))}
-              className="w-full h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 text-base"
+              disabled={loading}
+              className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all duration-200 hover-scale"
             >
               {loading ? (
                 <div className="flex items-center gap-3">
@@ -308,11 +259,17 @@ const AuthPage: React.FC = () => {
               )}
             </Button>
           </form>
+
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <p className="text-center text-sm text-gray-500">
+              Demo Credentials: admin@foundarly.com / password123
+            </p>
+          </div>
         </div>
 
         {/* Footer */}
         <div className="text-center mt-8 animate-fade-in" style={{ animationDelay: '0.6s' }}>
-          <p className="text-blue-200 text-sm font-medium">
+          <p className="text-gray-500 text-sm">
             Empowering connections, driving success
           </p>
           <div className="flex items-center justify-center mt-4 space-x-2">
