@@ -31,6 +31,7 @@ interface MobileCardProps {
   };
   badges?: string[];
   onClick?: () => void;
+  actions?: React.ReactNode;
 }
 
 const MobileCard = ({ 
@@ -41,7 +42,8 @@ const MobileCard = ({
   contact, 
   dates, 
   badges = [], 
-  onClick 
+  onClick,
+  actions
 }: MobileCardProps) => {
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
@@ -49,8 +51,10 @@ const MobileCard = ({
         return <CheckCircle className="w-4 h-4 text-green-500" />;
       case 'rejected':
         return <XCircle className="w-4 h-4 text-red-500" />;
-      case 'in_discussion':
+      case 'in-discussion':
         return <MessageSquare className="w-4 h-4 text-blue-500" />;
+      case 'scheduled':
+        return <Clock className="w-4 h-4 text-purple-500" />;
       case 'high':
         return <AlertCircle className="w-4 h-4 text-red-500" />;
       case 'medium':
@@ -68,9 +72,9 @@ const MobileCard = ({
         return 'bg-green-100 text-green-800 border-green-200';
       case 'rejected':
         return 'bg-red-100 text-red-800 border-red-200';
-      case 'in_discussion':
+      case 'in-discussion':
         return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'scheduled_followup':
+      case 'scheduled':
         return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'high':
         return 'bg-red-100 text-red-800 border-red-200';
@@ -103,9 +107,16 @@ const MobileCard = ({
               </p>
             )}
           </div>
-          <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(status)}`}>
-            {getStatusIcon(status)}
-            <span className="capitalize">{status.replace('_', ' ')}</span>
+          <div className="flex items-center gap-2">
+            <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(status)}`}>
+              {getStatusIcon(status)}
+              <span className="capitalize">{status.replace('_', ' ').replace('-', ' ')}</span>
+            </div>
+            {actions && (
+              <div className="flex items-center">
+                {actions}
+              </div>
+            )}
           </div>
         </div>
 
@@ -149,13 +160,13 @@ const MobileCard = ({
             {dates.lastContact && (
               <div className="flex items-center gap-1">
                 <Calendar className="w-3 h-3" />
-                <span>Last: {new Date(dates.lastContact).toLocaleDateString()}</span>
+                <span>Last: {dates.lastContact}</span>
               </div>
             )}
             {dates.nextFollowup && (
               <div className="flex items-center gap-1">
                 <Clock className="w-3 h-3" />
-                <span>Next: {new Date(dates.nextFollowup).toLocaleDateString()}</span>
+                <span>Next: {dates.nextFollowup}</span>
               </div>
             )}
           </div>
