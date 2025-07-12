@@ -151,7 +151,7 @@ const AuthPage: React.FC = () => {
         <div className="absolute bottom-1/4 left-3/4 w-3 h-3 bg-indigo-300/25 rounded-full animate-bounce" style={{ animationDelay: '5s' }}></div>
       </div>
 
-      <div className="relative w-full max-w-md mx-auto">
+      <div className="relative w-full max-w-md">
         {/* Logo and Brand */}
         <div className="text-center mb-8 animate-fade-in">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-3xl mb-6 animate-scale-in shadow-2xl border border-white/10">

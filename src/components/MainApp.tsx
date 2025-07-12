@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import MobileNavigation from './MobileNavigation';
 import Dashboard from './Dashboard';
@@ -104,7 +104,7 @@ const MainApp = () => {
         </div>
         
         {/* Mobile content */}
-        <div className="lg:hidden flex-1 overflow-y-auto scrollbar-hide pb-20">
+        <div className="lg:hidden flex-1 overflow-y-auto scrollbar-hide">
           <div className="min-h-full animate-fade-in">
             {renderCurrentPage()}
           </div>
