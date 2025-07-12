@@ -4,25 +4,109 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    
+    <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#3b82f6" />
-    <meta name="description" content="College Relationship Management Dashboard" />
+    <meta name="description" content="Professional College Relationship Management Dashboard for tracking interactions, tasks, and team management" />
+    <meta name="keywords" content="CRM, college, management, dashboard, education, relationship, tracking" />
+    <meta name="author" content="CRM Dashboard Team" />
+    
+    <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Apple Touch Icon -->
     <link rel="apple-touch-icon" href="/placeholder.svg" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/placeholder.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/placeholder.svg" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="CRM Dashboard" />
+    
+    <!-- Microsoft Tiles -->
+    <meta name="msapplication-TileImage" content="/placeholder.svg" />
+    <meta name="msapplication-TileColor" content="#3b82f6" />
+    <meta name="msapplication-config" content="/browserconfig.xml" />
+    
+    <!-- Splash Screen for iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-startup-image" href="/placeholder.svg" />
+    
+    <!-- Security Headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="CRM Dashboard" />
+    <meta property="og:description" content="Professional College Relationship Management Dashboard" />
+    <meta property="og:image" content="/placeholder.svg" />
+    <meta property="og:url" content="/" />
+    <meta property="og:type" content="website" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="CRM Dashboard" />
+    <meta name="twitter:description" content="Professional College Relationship Management Dashboard" />
+    <meta name="twitter:image" content="/placeholder.svg" />
+    
     <title>CRM Dashboard</title>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Service Worker Registration -->
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
           navigator.serviceWorker.register('/sw.js')
             .then(function(registration) {
               console.log('SW registered: ', registration);
+              
+              // Update available
+              registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    // Show update available notification
+                    if (confirm('New version available! Click OK to update.')) {
+                      window.location.reload();
+                    }
+                  }
+                });
+              });
+              
             }, function(registrationError) {
               console.log('SW registration failed: ', registrationError);
             });
+        });
+      }
+
+      // Handle install prompt
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent Chrome 67 and earlier from automatically showing the prompt
+        e.preventDefault();
+        // Stash the event so it can be triggered later
+        deferredPrompt = e;
+        
+        // Show install button or banner
+        console.log('PWA install prompt available');
+      });
+
+      // Handle successful installation
+      window.addEventListener('appinstalled', (evt) => {
+        console.log('PWA was installed');
+      });
+
+      // Register for push notifications (optional)
+      if ('Notification' in window && 'serviceWorker' in navigator) {
+        // Request permission for notifications
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            console.log('Notification permission granted');
+          }
         });
       }
     </script>
