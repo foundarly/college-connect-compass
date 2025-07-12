@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Eye, EyeOff, Building2, Sparkles, Mail, Lock, User, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -80,29 +79,42 @@ const AuthPage: React.FC = () => {
       return;
     }
 
+    if (!fullName.trim()) {
+      toast({
+        title: "Full name required",
+        description: "Please enter your full name.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      console.log('Attempting signup with:', { email, fullName: fullName.trim() });
       
-      const { error } = await supabase.auth.signUp({
-        email,
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
         password,
         options: {
-          emailRedirectTo: redirectUrl,
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
-            full_name: fullName,
+            full_name: fullName.trim(),
           }
         }
       });
 
+      console.log('Signup response:', { data, error });
+
       if (error) {
+        console.error('Signup error:', error);
         toast({
           title: "Signup Failed",
           description: error.message,
           variant: "destructive",
         });
       } else {
+        console.log('Signup successful:', data);
         toast({
           title: "Account Created!",
           description: "Please check your email to verify your account.",
@@ -114,6 +126,7 @@ const AuthPage: React.FC = () => {
         setFullName('');
       }
     } catch (error) {
+      console.error('Unexpected signup error:', error);
       toast({
         title: "Signup Failed",
         description: "An unexpected error occurred. Please try again.",
