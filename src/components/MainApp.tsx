@@ -7,73 +7,40 @@ import CollegeList from './CollegeList';
 import TaskManagement from './TaskManagement';
 import TeamManagement from './TeamManagement';
 import AuthPage from './AuthPage';
+import { supabase } from '@/integrations/supabase/client';
+import { User, Session } from '@supabase/supabase-js';
 
 const MainApp = () => {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authError, setAuthError] = useState('');
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // Check for existing authentication on app load
   useEffect(() => {
-    const checkAuthStatus = () => {
-      const authData = localStorage.getItem('foundarly_auth');
-      const authTimestamp = localStorage.getItem('foundarly_auth_timestamp');
-      
-      if (authData && authTimestamp) {
-        const now = Date.now();
-        const authTime = parseInt(authTimestamp);
-        const oneWeek = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
-        
-        // Check if auth is still valid (within 7 days)
-        if (now - authTime < oneWeek) {
-          setIsAuthenticated(true);
-        } else {
-          // Auth expired, clear storage
-          localStorage.removeItem('foundarly_auth');
-          localStorage.removeItem('foundarly_auth_timestamp');
-        }
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log('Auth state changed:', event, session);
+        setSession(session);
+        setUser(session?.user ?? null);
+        setAuthLoading(false);
       }
-      setAuthLoading(false);
-    };
+    );
 
-    checkAuthStatus();
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session);
+      setSession(session);
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const handleLogin = async (email: string, password: string) => {
-    setAuthLoading(true);
-    setAuthError('');
-    
-    // Simple demo authentication with persistence
-    if (email === 'admin@foundarly.com' && password === 'password123') {
-      setTimeout(() => {
-        const authData = {
-          email,
-          loginTime: Date.now()
-        };
-        
-        // Store auth data and timestamp
-        localStorage.setItem('foundarly_auth', JSON.stringify(authData));
-        localStorage.setItem('foundarly_auth_timestamp', Date.now().toString());
-        
-        setIsAuthenticated(true);
-        setAuthLoading(false);
-      }, 1000);
-    } else {
-      setTimeout(() => {
-        setAuthError('Invalid credentials. Please try admin@foundarly.com / password123');
-        setAuthLoading(false);
-      }, 1000);
-    }
-  };
-
-  const handleLogout = () => {
-    // Clear auth data from localStorage
-    localStorage.removeItem('foundarly_auth');
-    localStorage.removeItem('foundarly_auth_timestamp');
-    
-    setIsAuthenticated(false);
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setCurrentPage('dashboard');
     setSidebarOpen(false);
   };
@@ -90,14 +57,8 @@ const MainApp = () => {
     );
   }
 
-  if (!isAuthenticated) {
-    return (
-      <AuthPage 
-        onLogin={handleLogin}
-        error={authError}
-        loading={authLoading}
-      />
-    );
+  if (!user || !session) {
+    return <AuthPage />;
   }
 
   const renderCurrentPage = () => {
