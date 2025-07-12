@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Calendar, Clock, AlertCircle, CheckCircle, Filter, Search, X } from 'lucide-react';
+import { Plus, Calendar, Clock, AlertCircle, CheckCircle, Filter, Search, X, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -10,10 +10,12 @@ import type { Tables } from '@/integrations/supabase/types';
 
 type Task = Tables<'tasks'>;
 type College = Tables<'colleges'>;
+type TeamMember = Tables<'team_members'>;
 
 const TaskManagement = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [colleges, setColleges] = useState<College[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterPriority, setFilterPriority] = useState('all');
@@ -23,8 +25,10 @@ const TaskManagement = () => {
     title: '',
     description: '',
     college_id: '',
+    assigned_to: '',
     due_date: '',
-    priority: 'medium' as 'low' | 'medium' | 'high'
+    priority: 'medium' as 'low' | 'medium' | 'high',
+    task_type: 'follow-up' as 'call' | 'visit' | 'email' | 'admin' | 'follow-up'
   });
   const { toast } = useToast();
 
@@ -34,13 +38,15 @@ const TaskManagement = () => {
 
   const fetchData = async () => {
     try {
-      const [tasksResponse, collegesResponse] = await Promise.all([
+      const [tasksResponse, collegesResponse, teamResponse] = await Promise.all([
         supabase.from('tasks').select('*').order('created_at', { ascending: false }),
-        supabase.from('colleges').select('*')
+        supabase.from('colleges').select('*'),
+        supabase.from('team_members').select('*').eq('status', 'active')
       ]);
 
       if (tasksResponse.data) setTasks(tasksResponse.data);
       if (collegesResponse.data) setColleges(collegesResponse.data);
+      if (teamResponse.data) setTeamMembers(teamResponse.data);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
@@ -64,12 +70,15 @@ const TaskManagement = () => {
     }
 
     try {
+      const assignedMember = teamMembers.find(m => m.id === newTask.assigned_to);
+      
       const { data, error } = await supabase
         .from('tasks')
         .insert([{
           ...newTask,
           college_id: newTask.college_id || null,
-          created_by: null // In a real app, this would be the authenticated user's ID
+          assigned_to: newTask.assigned_to || null,
+          assigned_to_name: assignedMember?.name || null
         }])
         .select()
         .single();
@@ -81,8 +90,10 @@ const TaskManagement = () => {
         title: '',
         description: '',
         college_id: '',
+        assigned_to: '',
         due_date: '',
-        priority: 'medium'
+        priority: 'medium',
+        task_type: 'follow-up'
       });
       setShowCreateForm(false);
 
@@ -176,15 +187,16 @@ const TaskManagement = () => {
     }
   };
 
-  const isOverdue = (dueDate: string | null) => {
-    if (!dueDate) return false;
-    return new Date(dueDate) < new Date() && tasks.find(t => t.due_date === dueDate)?.status !== 'completed';
+  const isOverdue = (dueDate: string | null, status: string | null) => {
+    if (!dueDate || status === 'completed') return false;
+    return new Date(dueDate) < new Date();
   };
 
   const filteredTasks = tasks.filter(task => {
     const matchesSearch = task.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          task.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         getCollegeName(task.college_id).toLowerCase().includes(searchTerm.toLowerCase());
+                         getCollegeName(task.college_id).toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         task.assigned_to_name?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = filterStatus === 'all' || task.status === filterStatus;
     const matchesPriority = filterPriority === 'all' || task.priority === filterPriority;
@@ -196,7 +208,7 @@ const TaskManagement = () => {
     total: tasks.length,
     pending: tasks.filter(t => t.status === 'pending').length,
     completed: tasks.filter(t => t.status === 'completed').length,
-    overdue: tasks.filter(t => t.due_date && isOverdue(t.due_date)).length,
+    overdue: tasks.filter(t => t.due_date && isOverdue(t.due_date, t.status)).length,
   };
 
   if (loading) {
@@ -335,6 +347,16 @@ const TaskManagement = () => {
                 <option key={college.id} value={college.id}>{college.name}</option>
               ))}
             </select>
+            <select
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={newTask.assigned_to}
+              onChange={(e) => setNewTask({...newTask, assigned_to: e.target.value})}
+            >
+              <option value="">Assign to Team Member (Optional)</option>
+              {teamMembers.map(member => (
+                <option key={member.id} value={member.id}>{member.name} - {member.role?.replace('_', ' ')}</option>
+              ))}
+            </select>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 type="date"
@@ -351,6 +373,17 @@ const TaskManagement = () => {
                 <option value="high">High Priority</option>
               </select>
             </div>
+            <select
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={newTask.task_type}
+              onChange={(e) => setNewTask({...newTask, task_type: e.target.value as any})}
+            >
+              <option value="follow-up">Follow-up</option>
+              <option value="call">Call</option>
+              <option value="visit">Visit</option>
+              <option value="email">Email</option>
+              <option value="admin">Administrative</option>
+            </select>
             <div className="flex gap-3">
               <Button onClick={createTask} className="flex-1">
                 Create Task
@@ -380,13 +413,27 @@ const TaskManagement = () => {
                       <span className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(task.status || 'pending')}`}>
                         {task.status}
                       </span>
+                      {task.task_type && (
+                        <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+                          {task.task_type}
+                        </span>
+                      )}
                     </div>
                     <div className="text-xs text-gray-500 space-y-1">
                       <div>{getCollegeName(task.college_id)}</div>
+                      {task.assigned_to_name && (
+                        <div className="flex items-center gap-1">
+                          <User className="w-3 h-3" />
+                          Assigned to: {task.assigned_to_name}
+                        </div>
+                      )}
                       {task.due_date && (
-                        <div className={`flex items-center gap-1 ${isOverdue(task.due_date) ? 'text-red-600 font-medium' : ''}`}>
+                        <div className={`flex items-center gap-1 ${isOverdue(task.due_date, task.status) ? 'text-red-600 font-medium' : ''}`}>
                           <Calendar className="w-3 h-3" />
                           Due: {new Date(task.due_date).toLocaleDateString()}
+                          {isOverdue(task.due_date, task.status) && (
+                            <span className="text-red-600 font-medium">(Overdue)</span>
+                          )}
                         </div>
                       )}
                     </div>

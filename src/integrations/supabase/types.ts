@@ -517,6 +517,7 @@ export type Database = {
       tasks: {
         Row: {
           assigned_to: string | null
+          assigned_to_name: string | null
           college_id: string | null
           created_at: string
           created_by: string | null
@@ -531,6 +532,7 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          assigned_to_name?: string | null
           college_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -545,6 +547,7 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          assigned_to_name?: string | null
           college_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -566,6 +569,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      team_members: {
+        Row: {
+          created_at: string
+          department: string | null
+          email: string
+          hire_date: string | null
+          id: string
+          name: string
+          phone: string | null
+          profile_image_url: string | null
+          role: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          department?: string | null
+          email: string
+          hire_date?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          profile_image_url?: string | null
+          role?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          department?: string | null
+          email?: string
+          hire_date?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          profile_image_url?: string | null
+          role?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_achievements: {
         Row: {

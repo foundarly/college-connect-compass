@@ -1,15 +1,28 @@
 
 import React, { useState, useEffect } from 'react';
-import { Users, Building2, CheckCircle, Clock, TrendingUp, MapPin, Phone, Calendar } from 'lucide-react';
+import { Users, CheckSquare, Calendar, TrendingUp, Plus, ArrowRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import type { Tables } from '@/integrations/supabase/types';
 
 type College = Tables<'colleges'>;
 type Task = Tables<'tasks'>;
+type TeamMember = Tables<'team_members'>;
 
-const Dashboard = () => {
-  const [colleges, setColleges] = useState<College[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
+interface DashboardProps {
+  onNavigate: (page: string) => void;
+}
+
+const Dashboard = ({ onNavigate }: DashboardProps) => {
+  const [stats, setStats] = useState({
+    totalColleges: 0,
+    pendingTasks: 0,
+    teamMembers: 0,
+    activeColleges: 0
+  });
+  const [recentColleges, setRecentColleges] = useState<College[]>([]);
+  const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,13 +31,30 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [collegesResponse, tasksResponse] = await Promise.all([
+      const [collegesResponse, tasksResponse, teamResponse] = await Promise.all([
         supabase.from('colleges').select('*'),
-        supabase.from('tasks').select('*').limit(5).order('created_at', { ascending: false })
+        supabase.from('tasks').select('*'),
+        supabase.from('team_members').select('*')
       ]);
 
-      if (collegesResponse.data) setColleges(collegesResponse.data);
-      if (tasksResponse.data) setTasks(tasksResponse.data);
+      // Calculate stats
+      const colleges = collegesResponse.data || [];
+      const tasks = tasksResponse.data || [];
+      const team = teamResponse.data || [];
+
+      setStats({
+        totalColleges: colleges.length,
+        pendingTasks: tasks.filter(t => t.status === 'pending').length,
+        teamMembers: team.filter(t => t.status === 'active').length,
+        activeColleges: colleges.filter(c => c.status === 'accepted').length
+      });
+
+      // Recent colleges (last 5)
+      setRecentColleges(colleges.slice(0, 5));
+
+      // Upcoming tasks (next 5 pending)
+      setUpcomingTasks(tasks.filter(t => t.status === 'pending').slice(0, 5));
+      
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -32,262 +62,221 @@ const Dashboard = () => {
     }
   };
 
-  const stats = {
-    total: colleges.length,
-    accepted: colleges.filter(c => c.status === 'accepted').length,
-    pending: colleges.filter(c => c.status === 'pending').length,
-    inDiscussion: colleges.filter(c => c.status === 'in-discussion').length,
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'accepted': return 'bg-green-100 text-green-800 border-green-200';
+      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
+      case 'in-discussion': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'scheduled': return 'bg-purple-100 text-purple-800 border-purple-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
   };
 
-  const recentColleges = colleges.slice(0, 5);
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-800 border-red-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'low': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-3xl p-8 text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative z-10">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Welcome to College CRM 👋
-          </h1>
-          <p className="text-xl text-blue-100 mb-6 max-w-2xl">
-            Track your outreach progress, manage college relationships, and boost your success rate with our comprehensive CRM dashboard.
-          </p>
-          <div className="flex flex-wrap gap-4">
-            <button className="bg-white text-blue-600 px-6 py-3 rounded-xl font-semibold hover:bg-blue-50 transition-colors">
-              Add New College
-            </button>
-            <button className="border border-white/30 text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/10 transition-colors">
-              View Analytics
-            </button>
+    <div className="min-h-screen bg-gray-50 p-4 space-y-6">
+      {/* Header */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-600">Welcome back! Here's what's happening today.</p>
           </div>
-        </div>
-        {/* Decorative elements */}
-        <div className="absolute top-4 right-4 w-32 h-32 bg-white/10 rounded-full"></div>
-        <div className="absolute bottom-4 right-16 w-16 h-16 bg-white/5 rounded-full"></div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Colleges</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">{stats.total}</p>
-            </div>
-            <div className="bg-blue-50 p-3 rounded-xl">
-              <Building2 className="w-6 h-6 text-blue-600" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <span className="text-green-600 text-sm font-medium">↗ 12% from last month</span>
+          <div className="flex gap-2">
+            <Button onClick={() => onNavigate('colleges')} className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Add College</span>
+            </Button>
+            <Button onClick={() => onNavigate('tasks')} variant="outline" className="flex items-center gap-2">
+              <CheckSquare className="w-4 h-4" />
+              <span className="hidden sm:inline">New Task</span>
+            </Button>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Accepted</p>
-              <p className="text-3xl font-bold text-emerald-600 mt-1">{stats.accepted}</p>
-            </div>
-            <div className="bg-emerald-50 p-3 rounded-xl">
-              <CheckCircle className="w-6 h-6 text-emerald-600" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <span className="text-emerald-600 text-sm font-medium">
-              {stats.total > 0 ? Math.round((stats.accepted / stats.total) * 100) : 0}% success rate
-            </span>
-          </div>
-        </div>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onNavigate('colleges')}>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Users className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total Colleges</p>
+                  <p className="text-xl font-bold text-gray-900">{stats.totalColleges}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Pending</p>
-              <p className="text-3xl font-bold text-amber-600 mt-1">{stats.pending}</p>
-            </div>
-            <div className="bg-amber-50 p-3 rounded-xl">
-              <Clock className="w-6 h-6 text-amber-600" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <span className="text-amber-600 text-sm font-medium">Needs follow-up</span>
-          </div>
-        </div>
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onNavigate('colleges')}>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <TrendingUp className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Active</p>
+                  <p className="text-xl font-bold text-green-600">{stats.activeColleges}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">In Discussion</p>
-              <p className="text-3xl font-bold text-blue-600 mt-1">{stats.inDiscussion}</p>
-            </div>
-            <div className="bg-blue-50 p-3 rounded-xl">
-              <TrendingUp className="w-6 h-6 text-blue-600" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <span className="text-blue-600 text-sm font-medium">Active conversations</span>
-          </div>
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onNavigate('tasks')}>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-yellow-100 rounded-lg">
+                  <CheckSquare className="w-5 h-5 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Pending Tasks</p>
+                  <p className="text-xl font-bold text-yellow-600">{stats.pendingTasks}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onNavigate('team')}>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Users className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Team Members</p>
+                  <p className="text-xl font-bold text-purple-600">{stats.teamMembers}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
-      {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Colleges */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-6 border-b border-gray-100">
-            <h2 className="text-xl font-bold text-gray-900">Recent Colleges</h2>
-            <p className="text-gray-600 mt-1">Latest additions to your database</p>
-          </div>
-          <div className="divide-y divide-gray-100">
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Recent Colleges</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => onNavigate('colleges')}>
+                View All <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
             {recentColleges.length > 0 ? (
               recentColleges.map((college) => (
-                <div key={college.id} className="p-6 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 truncate">{college.name}</h3>
-                      <div className="flex items-center text-gray-500 text-sm mt-1">
-                        <MapPin className="w-4 h-4 mr-1" />
-                        <span>{college.city}, {college.state}</span>
-                      </div>
-                      <div className="flex items-center text-gray-500 text-sm mt-1">
-                        <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">
-                          {college.college_type}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="ml-4">
-                      <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                        college.status === 'accepted' ? 'bg-emerald-50 text-emerald-700' :
-                        college.status === 'pending' ? 'bg-amber-50 text-amber-700' :
-                        college.status === 'rejected' ? 'bg-red-50 text-red-700' :
-                        'bg-blue-50 text-blue-700'
-                      }`}>
-                        {college.status?.replace('-', ' ') || 'pending'}
-                      </span>
-                    </div>
+                <div key={college.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-gray-900 truncate">{college.name}</h4>
+                    <p className="text-sm text-gray-600">{college.city}, {college.state}</p>
                   </div>
+                  <span className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(college.status || 'pending')}`}>
+                    {college.status}
+                  </span>
                 </div>
               ))
             ) : (
-              <div className="p-8 text-center text-gray-500">
-                <Building2 className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+              <div className="text-center py-8 text-gray-500">
+                <Users className="w-12 h-12 mx-auto mb-2 text-gray-300" />
                 <p>No colleges added yet</p>
-                <button className="mt-2 text-blue-600 hover:text-blue-700 font-medium">
-                  Add your first college
-                </button>
+                <Button variant="outline" size="sm" className="mt-2" onClick={() => onNavigate('colleges')}>
+                  Add First College
+                </Button>
               </div>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        {/* Recent Tasks */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-6 border-b border-gray-100">
-            <h2 className="text-xl font-bold text-gray-900">Recent Tasks</h2>
-            <p className="text-gray-600 mt-1">Your latest follow-up activities</p>
-          </div>
-          <div className="divide-y divide-gray-100">
-            {tasks.length > 0 ? (
-              tasks.map((task) => (
-                <div key={task.id} className="p-6 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 truncate">{task.title}</h3>
-                      <p className="text-gray-600 text-sm mt-1 line-clamp-2">{task.description}</p>
-                      <div className="flex items-center text-gray-500 text-sm mt-2">
-                        <Calendar className="w-4 h-4 mr-1" />
-                        <span>
-                          {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="ml-4 flex flex-col items-end">
-                      <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                        task.priority === 'high' ? 'bg-red-50 text-red-700' :
-                        task.priority === 'medium' ? 'bg-amber-50 text-amber-700' :
-                        'bg-green-50 text-green-700'
-                      }`}>
-                        {task.priority} priority
-                      </span>
-                      <span className={`mt-2 px-2 py-1 text-xs rounded-full ${
-                        task.status === 'completed' ? 'bg-green-50 text-green-700' :
-                        task.status === 'overdue' ? 'bg-red-50 text-red-700' :
-                        'bg-gray-50 text-gray-700'
-                      }`}>
-                        {task.status}
-                      </span>
+        {/* Upcoming Tasks */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Upcoming Tasks</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => onNavigate('tasks')}>
+                View All <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {upcomingTasks.length > 0 ? (
+              upcomingTasks.map((task) => (
+                <div key={task.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-gray-900 truncate">{task.title}</h4>
+                    <div className="flex items-center gap-2 mt-1">
+                      {task.due_date && (
+                        <div className="flex items-center gap-1 text-xs text-gray-600">
+                          <Calendar className="w-3 h-3" />
+                          {new Date(task.due_date).toLocaleDateString()}
+                        </div>
+                      )}
                     </div>
                   </div>
+                  <span className={`px-2 py-1 text-xs rounded-full border ${getPriorityColor(task.priority || 'medium')}`}>
+                    {task.priority}
+                  </span>
                 </div>
               ))
             ) : (
-              <div className="p-8 text-center text-gray-500">
-                <Clock className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p>No tasks created yet</p>
-                <button className="mt-2 text-blue-600 hover:text-blue-700 font-medium">
-                  Create your first task
-                </button>
+              <div className="text-center py-8 text-gray-500">
+                <CheckSquare className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                <p>No pending tasks</p>
+                <Button variant="outline" size="sm" className="mt-2" onClick={() => onNavigate('tasks')}>
+                  Create First Task
+                </Button>
               </div>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <button className="flex items-center p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors text-left">
-            <div className="bg-blue-50 p-3 rounded-lg mr-4">
-              <Building2 className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900">Add College</p>
-              <p className="text-sm text-gray-600">Register new institution</p>
-            </div>
-          </button>
-          
-          <button className="flex items-center p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors text-left">
-            <div className="bg-green-50 p-3 rounded-lg mr-4">
-              <Phone className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900">Log Interaction</p>
-              <p className="text-sm text-gray-600">Record meeting or call</p>
-            </div>
-          </button>
-          
-          <button className="flex items-center p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors text-left">
-            <div className="bg-purple-50 p-3 rounded-lg mr-4">
-              <Calendar className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900">Schedule Task</p>
-              <p className="text-sm text-gray-600">Plan follow-up activity</p>
-            </div>
-          </button>
-          
-          <button className="flex items-center p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors text-left">
-            <div className="bg-amber-50 p-3 rounded-lg mr-4">
-              <TrendingUp className="w-5 h-5 text-amber-600" />
-            </div>
-            <div>
-              <p className="font-semibold text-gray-900">View Reports</p>
-              <p className="text-sm text-gray-600">Analyze performance</p>
-            </div>
-          </button>
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => onNavigate('colleges')}>
+              <Users className="w-6 h-6" />
+              <span className="text-sm">Manage Colleges</span>
+            </Button>
+            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => onNavigate('tasks')}>
+              <CheckSquare className="w-6 h-6" />
+              <span className="text-sm">View Tasks</span>
+            </Button>
+            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => onNavigate('team')}>
+              <Users className="w-6 h-6" />
+              <span className="text-sm">Team Members</span>
+            </Button>
+            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => onNavigate('colleges')}>
+              <Plus className="w-6 h-6" />
+              <span className="text-sm">Add College</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
