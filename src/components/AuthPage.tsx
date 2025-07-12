@@ -43,30 +43,30 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLogin, error, loading = false }) 
         <div className="absolute top-40 left-40 w-80 h-80 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" style={{ animationDelay: '4s' }}></div>
       </div>
 
-      <div className="relative w-full max-w-md">
+      <div className="relative w-full max-w-md mx-auto">
         {/* Logo and Brand */}
-        <div className="text-center mb-8 animate-fade-in">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl mb-4 animate-scale-in">
+        <div className="text-center mb-6 animate-fade-in">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl mb-4 animate-scale-in shadow-lg">
             <Building2 className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Foundarly Management</h1>
-          <p className="text-gray-600">Excellence in Every Connection</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Foundarly Management</h1>
+          <p className="text-gray-600 text-sm sm:text-base">Excellence in Every Connection</p>
         </div>
 
         {/* Motivational Quote */}
         <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 mb-6 border border-white/50 shadow-lg animate-fade-in" style={{ animationDelay: '0.2s' }}>
           <div className="flex items-center gap-2 text-blue-600 mb-2">
-            <Sparkles className="w-4 h-4" />
+            <Sparkles className="w-4 h-4 flex-shrink-0" />
             <span className="text-sm font-medium">Daily Motivation</span>
           </div>
-          <p className="text-gray-700 text-sm italic">"{currentQuote}"</p>
+          <p className="text-gray-700 text-sm italic leading-relaxed">"{currentQuote}"</p>
         </div>
 
         {/* Login Form */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-8 animate-scale-in" style={{ animationDelay: '0.4s' }}>
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-6 sm:p-8 animate-scale-in" style={{ animationDelay: '0.4s' }}>
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-700 font-medium">
+              <Label htmlFor="email" className="text-gray-700 font-medium text-sm">
                 Email Address
               </Label>
               <Input
@@ -76,12 +76,13 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLogin, error, loading = false }) 
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
                 required
-                className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 text-base"
+                autoComplete="email"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-gray-700 font-medium">
+              <Label htmlFor="password" className="text-gray-700 font-medium text-sm">
                 Password
               </Label>
               <div className="relative">
@@ -92,12 +93,14 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLogin, error, loading = false }) 
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   required
-                  className="h-12 pr-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                  className="h-12 pr-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 text-base"
+                  autoComplete="current-password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-1"
+                  tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -112,8 +115,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLogin, error, loading = false }) 
 
             <Button
               type="submit"
-              disabled={loading}
-              className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all duration-200 hover-scale"
+              disabled={loading || !email || !password}
+              className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all duration-200 hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {loading ? (
                 <div className="flex items-center gap-2">
@@ -127,14 +130,22 @@ const AuthPage: React.FC<AuthPageProps> = ({ onLogin, error, loading = false }) 
           </form>
 
           <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-center text-sm text-gray-500">
-              Demo Credentials: admin@foundarly.com / password123
-            </p>
+            <div className="bg-blue-50 rounded-lg p-3">
+              <p className="text-center text-sm text-blue-700 font-medium mb-1">
+                Demo Credentials
+              </p>
+              <p className="text-center text-xs text-blue-600">
+                Email: admin@foundarly.com
+              </p>
+              <p className="text-center text-xs text-blue-600">
+                Password: password123
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-8 animate-fade-in" style={{ animationDelay: '0.6s' }}>
+        <div className="text-center mt-6 animate-fade-in" style={{ animationDelay: '0.6s' }}>
           <p className="text-gray-500 text-sm">
             Empowering connections, driving success
           </p>
