@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, TrendingUp, TrendingDown } from 'lucide-react';
 
 interface StatItem {
   label: string;
@@ -21,33 +21,45 @@ interface StatsGridProps {
 
 const StatsGrid = ({ stats, onStatClick }: StatsGridProps) => {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {stats.map((stat, index) => {
         const Icon = stat.icon;
         return (
           <Card 
             key={index} 
-            className={`hover:shadow-md transition-all duration-200 ${onStatClick ? 'cursor-pointer active:scale-[0.98]' : ''}`}
+            className={`hover:shadow-lg transition-all duration-300 border-0 bg-white/90 backdrop-blur-sm ${
+              onStatClick ? 'cursor-pointer hover:scale-105 active:scale-95' : ''
+            }`}
             onClick={() => onStatClick?.(index)}
           >
-            <CardContent className="p-3 lg:p-4">
-              <div className="flex items-center space-x-2 lg:space-x-3">
-                <div className={`p-2 rounded-lg ${stat.color} flex-shrink-0`}>
-                  <Icon className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className={`p-3 rounded-xl ${stat.color} shadow-lg`}>
+                  <Icon className="w-5 h-5 text-white" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs lg:text-sm text-gray-600 truncate">{stat.label}</p>
-                  <div className="flex items-center space-x-2">
-                    <p className="text-lg lg:text-xl font-bold text-gray-900">{stat.value}</p>
-                    {stat.trend && (
-                      <span className={`text-xs font-medium ${
-                        stat.trend.isPositive ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {stat.trend.isPositive ? '+' : ''}{stat.trend.value}%
-                      </span>
+                {stat.trend && (
+                  <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                    stat.trend.isPositive 
+                      ? 'bg-green-100 text-green-700' 
+                      : 'bg-red-100 text-red-700'
+                  }`}>
+                    {stat.trend.isPositive ? (
+                      <TrendingUp className="w-3 h-3" />
+                    ) : (
+                      <TrendingDown className="w-3 h-3" />
                     )}
+                    <span>{stat.trend.value}%</span>
                   </div>
-                </div>
+                )}
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-2xl lg:text-3xl font-bold text-gray-900">
+                  {stat.value}
+                </p>
+                <p className="text-sm text-gray-600 font-medium">
+                  {stat.label}
+                </p>
               </div>
             </CardContent>
           </Card>

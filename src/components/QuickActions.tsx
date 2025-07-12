@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Search, Filter, Calendar, FileText, Users, Settings } from 'lucide-react';
+import { Plus, Search, Filter, Calendar, FileText, Users } from 'lucide-react';
 
 interface QuickActionsProps {
   onAction: (action: string) => void;
@@ -19,9 +19,9 @@ const QuickActions = ({ onAction }: QuickActionsProps) => {
   ];
 
   return (
-    <Card>
-      <CardContent className="p-4">
-        <h3 className="font-semibold text-gray-900 mb-3">Quick Actions</h3>
+    <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm">
+      <CardContent className="p-6">
+        <h3 className="font-semibold text-gray-900 mb-4 text-lg">Quick Actions</h3>
         <div className="grid grid-cols-3 lg:grid-cols-6 gap-3">
           {actions.map((action) => {
             const Icon = action.icon;
@@ -31,10 +31,10 @@ const QuickActions = ({ onAction }: QuickActionsProps) => {
                 variant="outline"
                 size="sm"
                 onClick={() => onAction(action.id)}
-                className="h-16 flex-col gap-2 hover:shadow-md transition-all duration-200"
+                className="h-20 flex-col gap-2 hover:shadow-lg transition-all duration-200 border-0 bg-white/80 hover:scale-105 active:scale-95"
               >
-                <div className={`p-2 rounded-lg ${action.color} text-white`}>
-                  <Icon className="w-4 h-4" />
+                <div className={`p-3 rounded-xl ${action.color} text-white shadow-lg`}>
+                  <Icon className="w-5 h-5" />
                 </div>
                 <span className="text-xs font-medium text-gray-700">{action.label}</span>
               </Button>

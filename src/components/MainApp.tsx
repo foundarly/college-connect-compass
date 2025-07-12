@@ -50,8 +50,8 @@ const MainApp = () => {
           {renderCurrentPage()}
         </div>
         
-        {/* Mobile content - with padding for fixed navigation */}
-        <div className="lg:hidden flex-1 overflow-auto pt-16 pb-20 safe-area-pt safe-area-pb">
+        {/* Mobile content - no top padding, just bottom padding for nav */}
+        <div className="lg:hidden flex-1 overflow-auto">
           <div className="min-h-full">
             {renderCurrentPage()}
           </div>
