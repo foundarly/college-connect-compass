@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, Users, CheckSquare, Calendar, Sparkles, Building2, Clock, Target, Phone } from 'lucide-react';
+import { TrendingUp, Users, CheckSquare, Calendar, Sparkles } from 'lucide-react';
 import StatsGrid from './StatsGrid';
 import QuickActions from './QuickActions';
 import { supabase } from '@/integrations/supabase/client';
@@ -87,101 +86,6 @@ const Dashboard = ({ onNavigate }: DashboardProps) => {
     }
   };
 
-  // Format stats data according to StatsGrid expected format
-  const formattedStats = [
-    {
-      label: 'Total Colleges',
-      value: stats.totalColleges,
-      icon: Building2,
-      color: 'bg-blue-600',
-      trend: {
-        value: 12,
-        isPositive: true
-      }
-    },
-    {
-      label: 'Pending Tasks',
-      value: stats.pendingTasks,
-      icon: CheckSquare,
-      color: 'bg-orange-600',
-      trend: {
-        value: 8,
-        isPositive: false
-      }
-    },
-    {
-      label: 'Completed This Week',
-      value: stats.completedThisWeek,
-      icon: Target,
-      color: 'bg-green-600',
-      trend: {
-        value: 15,
-        isPositive: true
-      }
-    },
-    {
-      label: 'Success Rate',
-      value: `${stats.successRate}%`,
-      icon: TrendingUp,
-      color: 'bg-purple-600',
-      trend: {
-        value: 5,
-        isPositive: true
-      }
-    },
-    {
-      label: 'This Week Contacts',
-      value: stats.thisWeekContacts,
-      icon: Phone,
-      color: 'bg-indigo-600',
-      trend: {
-        value: 20,
-        isPositive: true
-      }
-    },
-    {
-      label: 'Avg Follow-ups',
-      value: stats.avgFollowups,
-      icon: Users,
-      color: 'bg-pink-600'
-    },
-    {
-      label: 'Response Time',
-      value: `${stats.responseTime}h`,
-      icon: Clock,
-      color: 'bg-red-600',
-      trend: {
-        value: 10,
-        isPositive: false
-      }
-    }
-  ];
-
-  const handleQuickAction = (action: string) => {
-    switch (action) {
-      case 'add-college':
-        onNavigate('colleges');
-        break;
-      case 'search':
-        onNavigate('colleges');
-        break;
-      case 'filter':
-        onNavigate('colleges');
-        break;
-      case 'schedule':
-        onNavigate('tasks');
-        break;
-      case 'reports':
-        onNavigate('dashboard');
-        break;
-      case 'team':
-        onNavigate('team');
-        break;
-      default:
-        console.log('Action not handled:', action);
-    }
-  };
-
   return (
     <div className="p-4 lg:p-8 space-y-6 animate-fade-in">
       {/* Header with Motivational Quote */}
@@ -208,17 +112,19 @@ const Dashboard = ({ onNavigate }: DashboardProps) => {
       {/* Stats Grid */}
       <div className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
         <StatsGrid 
-          stats={formattedStats}
-          onStatClick={(index) => {
-            console.log('Stat clicked:', index);
-            // Handle stat click if needed
-          }}
+          totalColleges={stats.totalColleges}
+          pendingTasks={stats.pendingTasks}
+          completedThisWeek={stats.completedThisWeek}
+          successRate={stats.successRate}
+          thisWeekContacts={stats.thisWeekContacts}
+          avgFollowups={stats.avgFollowups}
+          responseTime={stats.responseTime}
         />
       </div>
 
       {/* Quick Actions */}
       <div className="animate-fade-in" style={{ animationDelay: '0.6s' }}>
-        <QuickActions onAction={handleQuickAction} />
+        <QuickActions onNavigate={onNavigate} />
       </div>
     </div>
   );
