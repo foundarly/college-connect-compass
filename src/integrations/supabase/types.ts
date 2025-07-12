@@ -53,6 +53,78 @@ export type Database = {
         }
         Relationships: []
       }
+      colleges: {
+        Row: {
+          address: string | null
+          city: string | null
+          college_type: string | null
+          contact_email: string | null
+          contact_person: string | null
+          contact_phone: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          last_contact_date: string | null
+          latitude: number | null
+          longitude: number | null
+          name: string
+          next_followup_date: string | null
+          pin_code: string | null
+          rejection_reason: string | null
+          state: string | null
+          status: string | null
+          status_notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          college_type?: string | null
+          contact_email?: string | null
+          contact_person?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          last_contact_date?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          next_followup_date?: string | null
+          pin_code?: string | null
+          rejection_reason?: string | null
+          state?: string | null
+          status?: string | null
+          status_notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          college_type?: string | null
+          contact_email?: string | null
+          contact_person?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          last_contact_date?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          next_followup_date?: string | null
+          pin_code?: string | null
+          rejection_reason?: string | null
+          state?: string | null
+          status?: string | null
+          status_notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       course_content: {
         Row: {
           created_at: string
@@ -180,6 +252,50 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interaction_logs: {
+        Row: {
+          college_id: string | null
+          contact_method: string | null
+          created_at: string
+          created_by: string | null
+          executive_name: string | null
+          file_url: string | null
+          id: string
+          interaction_date: string
+          notes: string
+        }
+        Insert: {
+          college_id?: string | null
+          contact_method?: string | null
+          created_at?: string
+          created_by?: string | null
+          executive_name?: string | null
+          file_url?: string | null
+          id?: string
+          interaction_date?: string
+          notes: string
+        }
+        Update: {
+          college_id?: string | null
+          contact_method?: string | null
+          created_at?: string
+          created_by?: string | null
+          executive_name?: string | null
+          file_url?: string | null
+          id?: string
+          interaction_date?: string
+          notes?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interaction_logs_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
             referencedColumns: ["id"]
           },
         ]
@@ -397,6 +513,59 @@ export type Database = {
           week_number?: number | null
         }
         Relationships: []
+      }
+      tasks: {
+        Row: {
+          assigned_to: string | null
+          college_id: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: string | null
+          status: string | null
+          task_type: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          college_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          status?: string | null
+          task_type?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          college_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          status?: string | null
+          task_type?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_achievements: {
         Row: {
