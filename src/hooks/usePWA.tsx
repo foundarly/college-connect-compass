@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface PWAInstallPrompt extends Event {
   prompt(): Promise<void>;
