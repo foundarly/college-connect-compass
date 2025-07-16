@@ -1,25 +1,79 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { LucideIcon, TrendingUp, TrendingDown } from 'lucide-react';
-
-interface StatItem {
-  label: string;
-  value: number | string;
-  icon: LucideIcon;
-  color: string;
-  trend?: {
-    value: number;
-    isPositive: boolean;
-  };
-}
+import { TrendingUp, Users, CheckSquare, Calendar, Phone, Clock, Target } from 'lucide-react';
 
 interface StatsGridProps {
-  stats: StatItem[];
-  onStatClick?: (index: number) => void;
+  totalColleges: number;
+  pendingTasks: number;
+  completedThisWeek: number;
+  successRate: number;
+  thisWeekContacts: number;
+  avgFollowups: number;
+  responseTime: number;
 }
 
-const StatsGrid = ({ stats, onStatClick }: StatsGridProps) => {
+const StatsGrid = ({ 
+  totalColleges, 
+  pendingTasks, 
+  completedThisWeek, 
+  successRate, 
+  thisWeekContacts, 
+  avgFollowups, 
+  responseTime 
+}: StatsGridProps) => {
+  const stats = [
+    {
+      label: 'Total Colleges',
+      value: totalColleges,
+      icon: Users,
+      color: 'bg-blue-600',
+      trend: { value: 12, isPositive: true }
+    },
+    {
+      label: 'Pending Tasks',
+      value: pendingTasks,
+      icon: CheckSquare,
+      color: 'bg-orange-600',
+      trend: { value: 5, isPositive: false }
+    },
+    {
+      label: 'Completed This Week',
+      value: completedThisWeek,
+      icon: Calendar,
+      color: 'bg-green-600',
+      trend: { value: 8, isPositive: true }
+    },
+    {
+      label: 'Success Rate',
+      value: `${successRate}%`,
+      icon: Target,
+      color: 'bg-purple-600',
+      trend: { value: 3, isPositive: true }
+    },
+    {
+      label: 'This Week Contacts',
+      value: thisWeekContacts,
+      icon: Phone,
+      color: 'bg-indigo-600',
+      trend: { value: 15, isPositive: true }
+    },
+    {
+      label: 'Avg Follow-ups',
+      value: avgFollowups,
+      icon: TrendingUp,
+      color: 'bg-pink-600',
+      trend: { value: 2, isPositive: true }
+    },
+    {
+      label: 'Response Time',
+      value: `${responseTime}h`,
+      icon: Clock,
+      color: 'bg-cyan-600',
+      trend: { value: 10, isPositive: false }
+    }
+  ];
+
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {stats.map((stat, index) => {
@@ -27,10 +81,7 @@ const StatsGrid = ({ stats, onStatClick }: StatsGridProps) => {
         return (
           <Card 
             key={index} 
-            className={`hover:shadow-lg transition-all duration-300 border-0 bg-white/90 backdrop-blur-sm ${
-              onStatClick ? 'cursor-pointer hover:scale-105 active:scale-95' : ''
-            }`}
-            onClick={() => onStatClick?.(index)}
+            className="hover:shadow-lg transition-all duration-300 border-0 bg-white/90 backdrop-blur-sm hover:scale-105 active:scale-95 cursor-pointer"
           >
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-3">
@@ -43,11 +94,7 @@ const StatsGrid = ({ stats, onStatClick }: StatsGridProps) => {
                       ? 'bg-green-100 text-green-700' 
                       : 'bg-red-100 text-red-700'
                   }`}>
-                    {stat.trend.isPositive ? (
-                      <TrendingUp className="w-3 h-3" />
-                    ) : (
-                      <TrendingDown className="w-3 h-3" />
-                    )}
+                    <TrendingUp className={`w-3 h-3 ${stat.trend.isPositive ? '' : 'rotate-180'}`} />
                     <span>{stat.trend.value}%</span>
                   </div>
                 )}

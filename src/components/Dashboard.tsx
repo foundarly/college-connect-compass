@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Users, CheckSquare, Calendar, Sparkles } from 'lucide-react';
 import StatsGrid from './StatsGrid';
